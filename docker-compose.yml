@@ -1,0 +1,70 @@
+services:
+  api:
+    image: ghcr.io/mahora974/mds_back_workshop_2:latest
+    container_name: lamarr-api
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-40420}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app_user}:${POSTGRES_PASSWORD:-app_password}@postgres:5432/${POSTGRES_DB:-app_db}?schema=app
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      THROTTLE_TTL: ${THROTTLE_TTL}
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT}
+    ports:
+      - "${API_PORT:-40420}:40420"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - poa-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18
+    container_name: lamarr_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app_db}
+      POSTGRES_USER: ${POSTGRES_USER:-app_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app_password}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    networks:
+      - poa-network
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app_user} -d ${POSTGRES_DB:-app_db}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:9
+    container_name: lamarr_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    ports:
+      - "${PGADMIN_PORT:-40422}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - poa-network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+    external: true
+    name: poa-api_pgdata18
+  pgadmin_data:
+
+networks:
+  poa-network:
+    driver: bridge
