@@ -4,7 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import type { Request, Response } from 'express';
 import { AppModule } from './app.module';
-import { PrismaExceptionFilter } from './common/prisma-exception.filter';
+import { PrismaExceptionFilter } from './hyperplanning/common/prisma-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

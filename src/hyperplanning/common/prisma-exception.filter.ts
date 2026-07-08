@@ -5,7 +5,7 @@ import {
   ExceptionFilter,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '../../../generated/prisma/client';
 
 /**
  * Traduit les erreurs Prisma courantes en réponses HTTP propres.
