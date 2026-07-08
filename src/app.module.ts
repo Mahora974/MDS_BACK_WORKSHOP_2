@@ -31,6 +31,7 @@ import { LinkForumTopicTagModule } from './modules/link-forum-topic-tag/link-for
 import { LinkDegreeSchoolModule } from './modules/link-degree-school/link-degree-school.module';
 import { BeNotifiedForModule } from './modules/be-notified-for/be-notified-for.module';
 import { BeBorrowedByModule } from './modules/be-borrowed-by/be-borrowed-by.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -63,8 +64,12 @@ import { BeBorrowedByModule } from './modules/be-borrowed-by/be-borrowed-by.modu
     LinkDegreeSchoolModule,
     BeNotifiedForModule,
     BeBorrowedByModule,
+    HttpModule.register({
+      baseURL: process.env.HYPERPLANNING_URL, 
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
+  
 })
 export class AppModule {}

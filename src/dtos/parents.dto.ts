@@ -1,0 +1,34 @@
+export class CreateParentsDto {
+  cle: number;
+  nom: 0;
+  prenom: 0;
+  civilite: 0;
+  nom_naissance: 0;
+  email: 0;
+  destinataire_courriers_absences: 0;
+  uid_identifiant: 0;
+  cas_identifiant: 0;
+  adfs_identifiant: 0;
+  saml_identifiant: 0;
+  commentaire: 0;
+  profession: 0;
+  situation_professionnelle: 0;
+  adresse1: 0;
+  adresse2: 0;
+  adresse3: 0;
+  adresse4: 0;
+  code_postal: 0;
+  ville: 0;
+  pays: 0;
+  province: 0;
+  numero_telephone_fixe: 0;
+  indicatif_telephone_fixe: 0;
+  numero_telephone_portable: 0;
+  indicatif_telephone_portable: 0;
+  autorisation_reception_sms: 0;
+  numero_telephone_bureau: 0;
+  indicatif_telephone_bureau: 0;
+  identifiant_connexion: 0;
+  acces_espace_parents: 0;
+  etudiants: 0;
+}

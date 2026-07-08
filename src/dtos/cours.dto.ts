@@ -1,0 +1,37 @@
+export class CreateCoursDto {
+  cle: number;
+  parente: 0;
+  cours_fils: 0;
+  cours_pere: number;
+  matiere: number;
+  type: 0;
+  duree: 0;
+  statut_place: 0;
+  mobilite_seances: 0;
+  est_non_place: 0;
+  place: 0;
+  domaine: 0;
+  domaine_potentiel: 0;
+  memo: 0;
+  reference: 0;
+  uid_identifiant: 0;
+  ponderation_avant_apport: number;
+  ponderation_apres_apport: number;
+  est_co_enseignement: 0;
+  presence_obligatoire: 0;
+  emargement_numerique: 0;
+  verrouillage: 0;
+  nombre_seance: number;
+  proprietaire: number;
+  enseignants: 0;
+  promotions: 0;
+  tdoptions: 0;
+  etudiants: 0;
+  regroupements: 0;
+  salles: 0;
+  modules_cursus_associes: 0;
+  utilisateurs_autorises_acces: 0;
+  profils_autorises_acces: 0;
+  derniere_modification: 0;
+  date_derniere_modification: 0;
+}
