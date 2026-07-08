@@ -1,0 +1,39 @@
+-- AlterTable
+ALTER TABLE "AuthSession" ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "BeBorrowedBy" ALTER COLUMN "isCurrent" SET DEFAULT false;
+
+-- AlterTable
+ALTER TABLE "BeProfessorFor" ALTER COLUMN "isReferent" SET DEFAULT false;
+
+-- AlterTable
+ALTER TABLE "Equipment" ALTER COLUMN "isActive" SET DEFAULT true,
+ALTER COLUMN "isBorrowed" SET DEFAULT false;
+
+-- AlterTable
+ALTER TABLE "Event" ALTER COLUMN "createdDate" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "ForumMessage" ALTER COLUMN "isAnswer" SET DEFAULT false,
+ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "ForumTopic" ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "News" ALTER COLUMN "isActive" SET DEFAULT true,
+ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "Parking" ALTER COLUMN "isFull" SET DEFAULT false;
+
+-- AlterTable
+ALTER TABLE "StudentCard" ALTER COLUMN "issuedAt" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "TicketReport" ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE "Tutorial" ALTER COLUMN "isPublished" SET DEFAULT false,
+ALTER COLUMN "createdAt" SET DEFAULT CURRENT_TIMESTAMP;
