@@ -1,98 +1,182 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Workshop API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST du projet workshop — **NestJS 11** + **Prisma 7** + **PostgreSQL**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Elle expose un CRUD complet sur l'ensemble du modèle de données (utilisateurs, écoles, actualités, événements, forum, covoiturage, matériel, etc.) et une documentation d'API interactive **Scalar**.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📚 Documentation de l'API (Scalar)
 
-## Project setup
+Une fois l'application démarrée, la documentation interactive est disponible ici :
 
+| Ressource | URL | Description |
+|---|---|---|
+| **Doc API Scalar** | **http://localhost:40420/reference** | Interface interactive : explorer toutes les routes, voir les schémas, tester les requêtes (« Try it »). |
+| Spec OpenAPI (brute) | http://localhost:40420/openapi.json | Document OpenAPI JSON, à importer dans Postman / Insomnia ou une CI. |
+
+> Le port suit la variable `PORT` (défaut de ce projet : **40420**). Remplace l'hôte/port par ceux de ton environnement en déploiement.
+>
+> La spec est générée automatiquement depuis les contrôleurs et les DTO (plugin `@nestjs/swagger`) : elle reste toujours synchronisée avec le code.
+
+---
+
+## 🧰 Stack technique
+
+- **Runtime** : Node.js 20+ (images Docker) / 22+ (dev local)
+- **Framework** : NestJS 11
+- **ORM** : Prisma 7 (générateur `prisma-client` en mode CJS, driver adapter `@prisma/adapter-pg`)
+- **Base de données** : PostgreSQL (18 via Docker), schéma `app`
+- **Validation** : `class-validator` / `class-transformer` (ValidationPipe global)
+- **Documentation** : OpenAPI (`@nestjs/swagger`) rendu par **Scalar**
+- **Conteneurisation** : Docker (multi-stage) + Docker Compose (+ pgAdmin)
+
+---
+
+## ✅ Prérequis
+
+- **Docker** + **Docker Compose**
+- Pour le dev local hors conteneur : **Node.js ≥ 22** et **npm**
+
+---
+
+## ⚙️ Configuration (`.env`)
+
+Copier le modèle puis ajuster :
 ```bash
-$ npm install
+cp .env.example .env
 ```
 
-## Compile and run the project
+| Variable | Rôle | Défaut |
+|---|---|---|
+| `POSTGRES_PORT` | Port PostgreSQL publié sur l'hôte | `40421` |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | Identifiants de la base | `app_db` / `app_user` / `app_password` |
+| `DATABASE_URL` | URL Prisma **côté hôte** (migrate/generate/studio, run local) | `postgresql://app_user:app_password@localhost:40421/app_db?schema=app` |
+| `PORT` / `API_PORT` | Port de l'API | `40420` |
+| `NODE_ENV` | Environnement | `development` |
+| `CORS_ORIGIN` | Origine autorisée CORS | `http://localhost:3000` |
+| `JWT_SECRET` / `JWT_REFRESH_SECRET` | Secrets JWT (**à changer**) | `change-me-*` |
+| `JWT_ACCESS_EXPIRATION` / `JWT_REFRESH_EXPIRATION` | Durées des tokens | `15m` / `7d` |
+| `THROTTLE_TTL` / `THROTTLE_LIMIT` | Rate limiting | `60000` / `100` |
+| `PGADMIN_PORT` / `PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD` | pgAdmin | `40422` / `admin@example.com` / `admin` |
+
+---
+
+## 🚀 Démarrage
+
+Stack complète : PostgreSQL + pgAdmin + API.
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env
+docker compose up -d
 ```
-
-## Run tests
-
+Puis appliquer les migrations sur la base (depuis l'hôte) :
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npx prisma migrate deploy
 ```
 
-## Deployment
+Services disponibles :
+| Service | URL |
+|---|---|
+| API | http://localhost:40420 |
+| Doc Scalar | http://localhost:40420/reference |
+| pgAdmin | http://localhost:40422 |
+| PostgreSQL | `localhost:40421` |
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+> Développement avec hot-reload en conteneur (build local de l'image `dev`) :
+> ```bash
+> docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+> ```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+---
+
+## 🗄️ Base de données & Prisma
+
+| Commande | Rôle |
+|---|---|
+| `npx prisma generate` | (Re)génère le client Prisma. **À relancer après toute modification du `schema.prisma`.** |
+| `npx prisma migrate deploy` | Applique les migrations existantes (base vierge / prod). |
+| `npx prisma migrate dev --name <nom>` | Crée + applique une nouvelle migration (dev). |
+| `npx prisma studio` | Explorateur de données (http://localhost:5555). |
+
+---
+
+## 🏗️ Structure du projet
+
+```
+.
+├── Dockerfile                       # Multi-stage : dev / build / prod
+├── docker-compose.yml               # Stack complète (api ghcr + postgres + pgadmin)
+├── docker-compose.dev.yml           # Override dev (build local de l'api, hot-reload)
+├── prisma/
+│   ├── schema.prisma                # Modèle + règles ON DELETE / defaults
+│   └── migrations/
+└── src/
+    ├── main.ts                      # Bootstrap : ValidationPipe, CORS, filtre Prisma, OpenAPI + Scalar
+    ├── app.module.ts                # Enregistrement des 28 modules
+    ├── common/
+    │   └── prisma-exception.filter.ts   # Erreurs Prisma → HTTP (P2002→409, P2025→404, P2003→409)
+    ├── prisma/                      # PrismaModule (global) + PrismaService
+    └── modules/<entité>/            # 1 dossier par table
+        ├── <entité>.module.ts
+        ├── <entité>.controller.ts   # POST / GET / GET :id / PATCH :id / DELETE :id
+        ├── <entité>.service.ts      # Accès Prisma
+        └── dto/                     # create + update (PartialType), validés
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+**Conventions** :
+- Le `PrismaService` est **global** : injectable partout sans réimporter `PrismaModule`.
+- Les tables de liaison (clés composites) utilisent leurs clés en paramètres d'URL ; celles sans champ hors-clé n'exposent pas de `PATCH`.
+- Toutes les entrées sont validées ; les propriétés non déclarées sont rejetées (`400`).
 
-## Resources
+---
 
-Check out a few resources that may come in handy when working with NestJS:
+## 📜 Scripts npm
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+| Script | Description |
+|---|---|
+| `npm run start:dev` | Démarrage en watch (développement). |
+| `npm run start` | Démarrage simple. |
+| `npm run build` | Compilation TypeScript vers `dist/`. |
+| `npm run start:prod` | Exécute le build de production (`node dist/src/main`). |
+| `npm run lint` | ESLint + correction automatique. |
+| `npm run format` | Prettier. |
+| `npm run test` / `test:e2e` / `test:cov` | Tests unitaires / e2e / couverture. |
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🌐 Aperçu des endpoints
 
-## Stay in touch
+Chaque entité expose (routes en kebab-case) :
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- `POST /<ressource>` — créer
+- `GET /<ressource>` — lister
+- `GET /<ressource>/:id` — détail
+- `PATCH /<ressource>/:id` — mettre à jour
+- `DELETE /<ressource>/:id` — supprimer
 
-## License
+> Exemples : `/users`, `/schools`, `/news`, `/events`, `/tutorials`, `/forum-topics`, `/forum-messages`, `/carpools`, `/equipments`, `/parkings`, `/student-cards`, `/roles`, `/categories`, `/degrees`, `/class-groups`, les tables de liaison (`/work-at`, `/be-passenger-for`, `/be-professor-for`, `/be-borrowed-by`, `/be-notified-for`, `/link-degree-school`, `/link-forum-topic-tag`)…
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+👉 **La liste exhaustive, les paramètres et les schémas sont dans la doc Scalar : http://localhost:40420/reference**
+
+---
+
+## 🐳 Docker (détail)
+
+- **`Dockerfile`** multi-stage :
+  - `dev` — dépendances complètes + `start:dev`
+  - `build` — `prisma generate` + `npm run build`
+  - `prod` — image légère, `node dist/src/main.js`
+- **`docker-compose.yml`** — stack de référence : API (image `ghcr.io/mahora974/mds_back_workshop_2`), PostgreSQL 18, pgAdmin. Le volume `pgdata` est **externe** (`poa-api_pgdata18`) : le créer si besoin avec `docker volume create poa-api_pgdata18`.
+- **`docker-compose.dev.yml`** — override pour builder l'API localement avec hot-reload.
+
+---
+
+## 📦 Déploiement
+
+La mise en production est gérée via `docker-compose.yml` (image publiée sur GHCR). Étapes clés côté cible :
+
+1. Renseigner l'environnement (`.env` ou variables du runtime : `POSTGRES_*`, `PORT`, `CORS_ORIGIN`, `JWT_*`, `THROTTLE_*`).
+2. `docker compose up -d`
+3. Appliquer les migrations : `npx prisma migrate deploy` (ou via un job d'init).
