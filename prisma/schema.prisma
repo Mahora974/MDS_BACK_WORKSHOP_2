@@ -3,9 +3,22 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
+// Politique ON DELETE (mix raisonné) :
+//  - Cascade  : tables de liaison / enfants possédés (l'enfant n'a pas de sens sans le parent)
+//  - SetNull  : FK nullable (auteur/emprunteur optionnel)
+//  - Restrict : référentiels + contenu signé par un auteur NOT NULL (défaut Prisma, implicite)
+// onUpdate = Cascade partout (défaut Prisma).
+//
+// Defaults :
+//  - createdAt / createdDate / issuedAt : @default(now())
+//  - modifiedAt / modifiedDate          : @updatedAt (géré par Prisma)
+//  - booléens d'état                    : @default(false), sauf isActive (@default(true))
+
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -25,12 +38,12 @@ model Equipment {
   serialNumber     String?   @db.VarChar(255)
   receptionDate    DateTime  @db.Date
   qrCode           String    @db.VarChar(255)
-  isActive         Boolean
-  isBorrowed       Boolean
+  isActive         Boolean   @default(true)
+  isBorrowed       Boolean   @default(false)
   idCurrentBorrower Int?
   idSchool         Int
 
-  currentBorrower User?          @relation("EquipmentCurrentBorrower", fields: [idCurrentBorrower], references: [id])
+  currentBorrower User?          @relation("EquipmentCurrentBorrower", fields: [idCurrentBorrower], references: [id], onDelete: SetNull)
   school          School         @relation(fields: [idSchool], references: [id])
   borrowRecords   BeBorrowedBy[]
 }
@@ -40,10 +53,10 @@ model BeBorrowedBy {
   idEquipment     Int
   startBorrowDate DateTime @db.Timestamptz()
   endBorrowDate   DateTime @db.Timestamptz()
-  isCurrent       Boolean
+  isCurrent       Boolean  @default(false)
 
-  user      User      @relation(fields: [idUser], references: [id])
-  equipment Equipment @relation(fields: [idEquipment], references: [id])
+  user      User      @relation(fields: [idUser], references: [id], onDelete: Cascade)
+  equipment Equipment @relation(fields: [idEquipment], references: [id], onDelete: Cascade)
 
   @@id([idUser, idEquipment, startBorrowDate])
 }
@@ -52,22 +65,22 @@ model AuthSession {
   id               Int       @id @default(autoincrement())
   idUser           Int
   sessionTokenHash String    @unique @db.VarChar(255)
-  createdAt        DateTime  @db.Timestamptz()
+  createdAt        DateTime  @default(now()) @db.Timestamptz()
   expiresAt        DateTime  @db.Timestamptz()
   revokedAt        DateTime? @db.Timestamptz()
   ipAddress        String    @db.VarChar(45)
   userAgent        String    @db.Text
 
-  user User @relation(fields: [idUser], references: [id])
+  user User @relation(fields: [idUser], references: [id], onDelete: Cascade)
 }
 
 model Tutorial {
   id           Int      @id @default(autoincrement())
   title        String   @db.VarChar(255)
   description  String   @db.Text
-  isPublished  Boolean
-  createdAt    DateTime @db.Timestamptz()
-  modifiedAt   DateTime @db.Timestamptz()
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now()) @db.Timestamptz()
+  modifiedAt   DateTime @updatedAt @db.Timestamptz()
   idCategory   Int
   idAuthor     Int
   idSchool     Int
@@ -81,8 +94,8 @@ model BePassengerFor {
   idPassenger Int
   idCarpool   Int
 
-  passenger User    @relation(fields: [idPassenger], references: [id])
-  carpool   Carpool @relation(fields: [idCarpool], references: [id])
+  passenger User    @relation(fields: [idPassenger], references: [id], onDelete: Cascade)
+  carpool   Carpool @relation(fields: [idCarpool], references: [id], onDelete: Cascade)
 
   @@id([idPassenger, idCarpool])
 }
@@ -91,8 +104,8 @@ model ForumTopic {
   id          Int      @id @default(autoincrement())
   title       String   @db.VarChar(255)
   description String   @db.Text
-  createdAt   DateTime @db.Timestamptz()
-  modifiedAt  DateTime @db.Timestamptz()
+  createdAt   DateTime @default(now()) @db.Timestamptz()
+  modifiedAt  DateTime @updatedAt @db.Timestamptz()
   idAuthor    Int
   idTypeTopic Int
 
@@ -107,8 +120,8 @@ model Event {
   name         String    @db.VarChar(255)
   description  String    @db.Text
   link         String?   @db.VarChar(255)
-  createdDate  DateTime  @db.Timestamptz()
-  modifiedDate DateTime  @db.Timestamptz()
+  createdDate  DateTime  @default(now()) @db.Timestamptz()
+  modifiedDate DateTime  @updatedAt @db.Timestamptz()
   startDate    DateTime  @db.Timestamptz()
   endDate      DateTime? @db.Timestamptz()
   idTypeEvent  Int
@@ -123,13 +136,13 @@ model Event {
 model ForumMessage {
   id         Int      @id @default(autoincrement())
   content    String   @db.Text
-  isAnswer   Boolean
-  createdAt  DateTime @db.Timestamptz()
-  modifiedAt DateTime @db.Timestamptz()
+  isAnswer   Boolean  @default(false)
+  createdAt  DateTime @default(now()) @db.Timestamptz()
+  modifiedAt DateTime @updatedAt @db.Timestamptz()
   idTopic    Int
   idAuthor   Int
 
-  topic  ForumTopic @relation(fields: [idTopic], references: [id])
+  topic  ForumTopic @relation(fields: [idTopic], references: [id], onDelete: Cascade)
   author User       @relation("ForumMessageAuthor", fields: [idAuthor], references: [id])
 }
 
@@ -151,8 +164,8 @@ model LinkForumTopicTag {
   idForumTopic Int
   idTag        Int
 
-  forumTopic ForumTopic @relation(fields: [idForumTopic], references: [id])
-  tag        Tag        @relation(fields: [idTag], references: [id])
+  forumTopic ForumTopic @relation(fields: [idForumTopic], references: [id], onDelete: Cascade)
+  tag        Tag        @relation(fields: [idTag], references: [id], onDelete: Cascade)
 
   @@id([idForumTopic, idTag])
 }
@@ -163,8 +176,8 @@ model TicketReport {
   description   String    @db.Text
   idReporter    Int
   idTypeReport  Int
-  createdAt     DateTime  @db.Timestamptz()
-  modifiedAt    DateTime? @db.Timestamptz()
+  createdAt     DateTime  @default(now()) @db.Timestamptz()
+  modifiedAt    DateTime? @updatedAt @db.Timestamptz()
 
   reporter   User       @relation("TicketReportReporter", fields: [idReporter], references: [id])
   typeReport TypeReport @relation(fields: [idTypeReport], references: [id])
@@ -174,8 +187,8 @@ model LinkDegreeSchool {
   idDegree Int
   idSchool Int
 
-  degree Degree @relation(fields: [idDegree], references: [id])
-  school School @relation(fields: [idSchool], references: [id])
+  degree Degree @relation(fields: [idDegree], references: [id], onDelete: Cascade)
+  school School @relation(fields: [idSchool], references: [id], onDelete: Cascade)
 
   @@id([idDegree, idSchool])
 }
@@ -207,7 +220,7 @@ model User {
 
   role      Role       @relation(fields: [idRole], references: [id])
   school    School     @relation(fields: [idSchool], references: [id])
-  classGroup ClassGroup? @relation(fields: [idClassGroup], references: [id])
+  classGroup ClassGroup? @relation(fields: [idClassGroup], references: [id], onDelete: SetNull)
 
   borrowedEquipments Equipment[]      @relation("EquipmentCurrentBorrower")
   borrowRecords      BeBorrowedBy[]
@@ -249,9 +262,9 @@ model News {
   id          Int      @id @default(autoincrement())
   title       String   @db.VarChar(150)
   description String   @db.Text
-  isActive    Boolean
-  createdAt   DateTime @db.Timestamptz()
-  modifiedAt  DateTime @db.Timestamptz()
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz()
+  modifiedAt  DateTime @updatedAt @db.Timestamptz()
   idTypeEvent Int
   idSchool    Int
   idAuthor    Int
@@ -273,7 +286,7 @@ model Parking {
   id         Int     @id @default(autoincrement())
   name       String? @db.VarChar(255)
   nbMaxPlace Int     @db.SmallInt
-  isFull     Boolean
+  isFull     Boolean @default(false)
   idSchool   Int
 
   school School @relation(fields: [idSchool], references: [id])
@@ -313,11 +326,11 @@ model BeProfessorFor {
   idUser       Int
   idClassGroup Int
   idCategory   Int
-  isReferent   Boolean
+  isReferent   Boolean @default(false)
 
-  user       User       @relation(fields: [idUser], references: [id])
-  classGroup ClassGroup @relation(fields: [idClassGroup], references: [id])
-  category   Category   @relation(fields: [idCategory], references: [id])
+  user       User       @relation(fields: [idUser], references: [id], onDelete: Cascade)
+  classGroup ClassGroup @relation(fields: [idClassGroup], references: [id], onDelete: Cascade)
+  category   Category   @relation(fields: [idCategory], references: [id], onDelete: Cascade)
 
   @@unique([idUser, idClassGroup, idCategory], name: "idx_beprofessorfor_1")
 }
@@ -325,19 +338,19 @@ model BeProfessorFor {
 model StudentCard {
   id        Int      @id @default(autoincrement())
   number    String   @unique @db.VarChar(255)
-  issuedAt  DateTime @db.Timestamptz()
+  issuedAt  DateTime @default(now()) @db.Timestamptz()
   qrCode    String   @db.VarChar(255)
   idStudent Int
 
-  student User @relation(fields: [idStudent], references: [id])
+  student User @relation(fields: [idStudent], references: [id], onDelete: Cascade)
 }
 
 model WorkAt {
   idUser   Int
   idSchool Int
 
-  user   User   @relation(fields: [idUser], references: [id])
-  school School @relation(fields: [idSchool], references: [id])
+  user   User   @relation(fields: [idUser], references: [id], onDelete: Cascade)
+  school School @relation(fields: [idSchool], references: [id], onDelete: Cascade)
 
   @@id([idUser, idSchool])
 }
@@ -363,8 +376,8 @@ model BeNotifiedFor {
   idUser      Int
   idTypeEvent Int
 
-  user      User      @relation(fields: [idUser], references: [id])
-  typeEvent TypeEvent @relation(fields: [idTypeEvent], references: [id])
+  user      User      @relation(fields: [idUser], references: [id], onDelete: Cascade)
+  typeEvent TypeEvent @relation(fields: [idTypeEvent], references: [id], onDelete: Cascade)
 
   @@id([idUser, idTypeEvent])
 }
