@@ -1,0 +1,370 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model TypeReport {
+  id    Int    @id @default(autoincrement())
+  title String @db.VarChar(255)
+
+  tickets TicketReport[]
+}
+
+model Equipment {
+  id               Int       @id @default(autoincrement())
+  title            String    @db.VarChar(255)
+  serialNumber     String?   @db.VarChar(255)
+  receptionDate    DateTime  @db.Date
+  qrCode           String    @db.VarChar(255)
+  isActive         Boolean
+  isBorrowed       Boolean
+  idCurrentBorrower Int?
+  idSchool         Int
+
+  currentBorrower User?          @relation("EquipmentCurrentBorrower", fields: [idCurrentBorrower], references: [id])
+  school          School         @relation(fields: [idSchool], references: [id])
+  borrowRecords   BeBorrowedBy[]
+}
+
+model BeBorrowedBy {
+  idUser          Int
+  idEquipment     Int
+  startBorrowDate DateTime @db.Timestamptz()
+  endBorrowDate   DateTime @db.Timestamptz()
+  isCurrent       Boolean
+
+  user      User      @relation(fields: [idUser], references: [id])
+  equipment Equipment @relation(fields: [idEquipment], references: [id])
+
+  @@id([idUser, idEquipment, startBorrowDate])
+}
+
+model AuthSession {
+  id               Int       @id @default(autoincrement())
+  idUser           Int
+  sessionTokenHash String    @unique @db.VarChar(255)
+  createdAt        DateTime  @db.Timestamptz()
+  expiresAt        DateTime  @db.Timestamptz()
+  revokedAt        DateTime? @db.Timestamptz()
+  ipAddress        String    @db.VarChar(45)
+  userAgent        String    @db.Text
+
+  user User @relation(fields: [idUser], references: [id])
+}
+
+model Tutorial {
+  id           Int      @id @default(autoincrement())
+  title        String   @db.VarChar(255)
+  description  String   @db.Text
+  isPublished  Boolean
+  createdAt    DateTime @db.Timestamptz()
+  modifiedAt   DateTime @db.Timestamptz()
+  idCategory   Int
+  idAuthor     Int
+  idSchool     Int
+
+  category Category @relation(fields: [idCategory], references: [id])
+  author   User     @relation("TutorialAuthor", fields: [idAuthor], references: [id])
+  school   School   @relation(fields: [idSchool], references: [id])
+}
+
+model BePassengerFor {
+  idPassenger Int
+  idCarpool   Int
+
+  passenger User    @relation(fields: [idPassenger], references: [id])
+  carpool   Carpool @relation(fields: [idCarpool], references: [id])
+
+  @@id([idPassenger, idCarpool])
+}
+
+model ForumTopic {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255)
+  description String   @db.Text
+  createdAt   DateTime @db.Timestamptz()
+  modifiedAt  DateTime @db.Timestamptz()
+  idAuthor    Int
+  idTypeTopic Int
+
+  author    User               @relation("ForumTopicAuthor", fields: [idAuthor], references: [id])
+  typeTopic TypeTopic          @relation(fields: [idTypeTopic], references: [id])
+  messages  ForumMessage[]
+  tagLinks  LinkForumTopicTag[]
+}
+
+model Event {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(255)
+  description  String    @db.Text
+  link         String?   @db.VarChar(255)
+  createdDate  DateTime  @db.Timestamptz()
+  modifiedDate DateTime  @db.Timestamptz()
+  startDate    DateTime  @db.Timestamptz()
+  endDate      DateTime? @db.Timestamptz()
+  idTypeEvent  Int
+  idSchool     Int
+  idCreator    Int
+
+  typeEvent TypeEvent @relation(fields: [idTypeEvent], references: [id])
+  school    School    @relation(fields: [idSchool], references: [id])
+  creator   User      @relation("EventCreator", fields: [idCreator], references: [id])
+}
+
+model ForumMessage {
+  id         Int      @id @default(autoincrement())
+  content    String   @db.Text
+  isAnswer   Boolean
+  createdAt  DateTime @db.Timestamptz()
+  modifiedAt DateTime @db.Timestamptz()
+  idTopic    Int
+  idAuthor   Int
+
+  topic  ForumTopic @relation(fields: [idTopic], references: [id])
+  author User       @relation("ForumMessageAuthor", fields: [idAuthor], references: [id])
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(25)
+
+  topicLinks LinkForumTopicTag[]
+}
+
+model TypeTopic {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(255)
+
+  forumTopics ForumTopic[]
+}
+
+model LinkForumTopicTag {
+  idForumTopic Int
+  idTag        Int
+
+  forumTopic ForumTopic @relation(fields: [idForumTopic], references: [id])
+  tag        Tag        @relation(fields: [idTag], references: [id])
+
+  @@id([idForumTopic, idTag])
+}
+
+model TicketReport {
+  id            Int       @id @default(autoincrement())
+  title         String    @db.VarChar(50)
+  description   String    @db.Text
+  idReporter    Int
+  idTypeReport  Int
+  createdAt     DateTime  @db.Timestamptz()
+  modifiedAt    DateTime? @db.Timestamptz()
+
+  reporter   User       @relation("TicketReportReporter", fields: [idReporter], references: [id])
+  typeReport TypeReport @relation(fields: [idTypeReport], references: [id])
+}
+
+model LinkDegreeSchool {
+  idDegree Int
+  idSchool Int
+
+  degree Degree @relation(fields: [idDegree], references: [id])
+  school School @relation(fields: [idSchool], references: [id])
+
+  @@id([idDegree, idSchool])
+}
+
+model User {
+  id                          Int       @id @default(autoincrement())
+  name                        String    @db.VarChar(125)
+  surname                     String    @db.VarChar(125)
+  email                       String    @unique @db.VarChar(255)
+  /// Nullable pour prendre en considération le login Microsoft SSO
+  password                    String?   @db.VarChar(255)
+  gridstackLayoutJson         String?   @db.Text
+  image                       String?   @db.Text
+  idRole                      Int
+  /// Éviter d'avoir à faire trop de requête pour trouver l'école
+  idSchool                    Int
+  /// Classe de la personne (si étudiant)
+  idClassGroup                Int?
+  /// Microsoft oid
+  ///
+  /// Identité SSO = OID + Claim (tenantId)
+  microsoftUserId             String?   @db.Uuid
+  /// Microsoft sub
+  microsoftSubject            String?   @db.VarChar(255)
+  /// Microsoft iss
+  microsoftIssuer              String?   @db.VarChar(500)
+  microsoftPreferredUsername  String?   @db.VarChar(255)
+  lastLoginAt                 DateTime? @db.Timestamptz()
+
+  role      Role       @relation(fields: [idRole], references: [id])
+  school    School     @relation(fields: [idSchool], references: [id])
+  classGroup ClassGroup? @relation(fields: [idClassGroup], references: [id])
+
+  borrowedEquipments Equipment[]      @relation("EquipmentCurrentBorrower")
+  borrowRecords      BeBorrowedBy[]
+  sessions           AuthSession[]
+  tutorials          Tutorial[]       @relation("TutorialAuthor")
+  carpoolPassengers  BePassengerFor[]
+  forumTopics        ForumTopic[]     @relation("ForumTopicAuthor")
+  createdEvents      Event[]          @relation("EventCreator")
+  forumMessages      ForumMessage[]   @relation("ForumMessageAuthor")
+  reportedTickets    TicketReport[]   @relation("TicketReportReporter")
+  news               News[]           @relation("NewsAuthor")
+  carpoolsDriven     Carpool[]
+  professorFor       BeProfessorFor[]
+  studentCard        StudentCard[]
+  workAt             WorkAt[]
+  notifications      BeNotifiedFor[]
+
+  @@index([email], name: "idx_user_1")
+}
+
+model School {
+  id                 Int    @id @default(autoincrement())
+  name               String @db.VarChar(125)
+  city               String @db.VarChar(50)
+  /// claim Microsoft pour l'école
+  microsoftTenantId  String @unique @db.Uuid
+
+  equipments   Equipment[]
+  tutorials    Tutorial[]
+  events       Event[]
+  news         News[]
+  parkings     Parking[]
+  degreeLinks  LinkDegreeSchool[]
+  users        User[]
+  workAtEntries WorkAt[]
+}
+
+model News {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(150)
+  description String   @db.Text
+  isActive    Boolean
+  createdAt   DateTime @db.Timestamptz()
+  modifiedAt  DateTime @db.Timestamptz()
+  idTypeEvent Int
+  idSchool    Int
+  idAuthor    Int
+
+  typeEvent TypeEvent @relation(fields: [idTypeEvent], references: [id])
+  school    School    @relation(fields: [idSchool], references: [id])
+  author    User      @relation("NewsAuthor", fields: [idAuthor], references: [id])
+}
+
+model Degree {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(255)
+
+  classGroups ClassGroup[]
+  schoolLinks LinkDegreeSchool[]
+}
+
+model Parking {
+  id         Int     @id @default(autoincrement())
+  name       String? @db.VarChar(255)
+  nbMaxPlace Int     @db.SmallInt
+  isFull     Boolean
+  idSchool   Int
+
+  school School @relation(fields: [idSchool], references: [id])
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(255)
+
+  users User[]
+}
+
+model ClassGroup {
+  id       Int    @id @default(autoincrement())
+  name     String @db.VarChar(150)
+  idDegree Int
+
+  degree    Degree           @relation(fields: [idDegree], references: [id])
+  users     User[]
+  professors BeProfessorFor[]
+}
+
+model Carpool {
+  id                Int      @id @default(autoincrement())
+  departure         String   @db.VarChar(255)
+  arrival           String   @db.VarChar(255)
+  nbAvailablePlaces Int      @db.SmallInt
+  nbMaxPlaces       Int      @db.SmallInt
+  startDate         DateTime @db.Timestamptz()
+  idDriver          Int
+
+  driver     User             @relation(fields: [idDriver], references: [id])
+  passengers BePassengerFor[]
+}
+
+model BeProfessorFor {
+  idUser       Int
+  idClassGroup Int
+  idCategory   Int
+  isReferent   Boolean
+
+  user       User       @relation(fields: [idUser], references: [id])
+  classGroup ClassGroup @relation(fields: [idClassGroup], references: [id])
+  category   Category   @relation(fields: [idCategory], references: [id])
+
+  @@unique([idUser, idClassGroup, idCategory], name: "idx_beprofessorfor_1")
+}
+
+model StudentCard {
+  id        Int      @id @default(autoincrement())
+  number    String   @unique @db.VarChar(255)
+  issuedAt  DateTime @db.Timestamptz()
+  qrCode    String   @db.VarChar(255)
+  idStudent Int
+
+  student User @relation(fields: [idStudent], references: [id])
+}
+
+model WorkAt {
+  idUser   Int
+  idSchool Int
+
+  user   User   @relation(fields: [idUser], references: [id])
+  school School @relation(fields: [idSchool], references: [id])
+
+  @@id([idUser, idSchool])
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(150)
+
+  tutorials          Tutorial[]
+  professorCategories BeProfessorFor[]
+}
+
+model TypeEvent {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(255)
+
+  events        Event[]
+  news          News[]
+  notifications BeNotifiedFor[]
+}
+
+model BeNotifiedFor {
+  idUser      Int
+  idTypeEvent Int
+
+  user      User      @relation(fields: [idUser], references: [id])
+  typeEvent TypeEvent @relation(fields: [idTypeEvent], references: [id])
+
+  @@id([idUser, idTypeEvent])
+}
