@@ -19,7 +19,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - poa-network
+      - lamarr-network
     restart: unless-stopped
 
   postgres:
@@ -32,7 +32,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-5433}:5432"
     networks:
-      - poa-network
+      - lamarr-network
     volumes:
       - pgdata:/var/lib/postgresql
     healthcheck:
@@ -54,17 +54,15 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - poa-network
+      - lamarr-network
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     restart: unless-stopped
 
 volumes:
   pgdata:
-    external: true
-    name: poa-api_pgdata18
   pgadmin_data:
 
 networks:
-  poa-network:
+  lamarr-network:
     driver: bridge

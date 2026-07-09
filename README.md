@@ -98,6 +98,7 @@ Services disponibles :
 | `npx prisma generate` | (Re)génère le client Prisma. **À relancer après toute modification du `schema.prisma`.** |
 | `npx prisma migrate deploy` | Applique les migrations existantes (base vierge / prod). |
 | `npx prisma migrate dev --name <nom>` | Crée + applique une nouvelle migration (dev). |
+| `npm run seed` | Peuple la base d'un jeu de démo (écoles MDS, formations, ~230 utilisateurs, M1 DFS…). Destructif (nettoie avant d'insérer), bloqué en production sauf `FORCE_SEED=true`. |
 | `npx prisma studio` | Explorateur de données (http://localhost:5555). |
 
 ---
@@ -168,7 +169,7 @@ Chaque entité expose (routes en kebab-case) :
   - `dev` — dépendances complètes + `start:dev`
   - `build` — `prisma generate` + `npm run build`
   - `prod` — image légère, `node dist/src/main.js`
-- **`docker-compose.yml`** — stack de référence : API (image `ghcr.io/mahora974/mds_back_workshop_2`), PostgreSQL 18, pgAdmin. Le volume `pgdata` est **externe** (`poa-api_pgdata18`) : le créer si besoin avec `docker volume create poa-api_pgdata18`.
+- **`docker-compose.yml`** — stack de référence : API (image `ghcr.io/mahora974/mds_back_workshop_2`), PostgreSQL 18, pgAdmin. Le volume `pgdata` est **géré par Compose** (créé et initialisé automatiquement au premier `up`, avec les bonnes permissions). Réseau : `lamarr-network`.
 - **`docker-compose.dev.yml`** — override pour builder l'API localement avec hot-reload.
 
 ---
